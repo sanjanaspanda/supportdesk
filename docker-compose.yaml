@@ -1,0 +1,28 @@
+version: "3.9"
+
+services:
+
+  db:
+    image: postgres:16
+    container_name: supportdesk_db
+    env_file: .env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  web:
+    build: .
+    container_name: supportdesk_web
+    env_file: .env
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    command: >
+      sh -c "python manage.py migrate_schemas --shared &&
+             python manage.py migrate_schemas &&
+             gunicorn SupportDesk.wsgi:application --bind 0.0.0.0:8000 --workers 3"
+
+volumes:
+  postgres_data:
